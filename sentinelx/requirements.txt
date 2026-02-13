@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic>=2.0
+python-dotenv
+langchain-core
+langchain-google-genai
+langgraph
+requests
