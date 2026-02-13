@@ -111,7 +111,3 @@ Requirements:
 
 This must be production-structured and suitable for a final year project demo.
 
-
-gemini api key = AIzaSyDbpA89fS7ayzCS5OLGvN6GHU5bEcO-aUs
-
-virus total api key = 6c10d6e9d59b5b2f038704b2ef1cab447b786df1cc55e29e09b2fc020362d0c4
