@@ -1,6 +1,7 @@
 """
 Report Agent — LangGraph Node
 Generates structured SOC-style incident report using Gemini.
+Includes threat intelligence enrichment in the final report.
 """
 import json
 import uuid
@@ -22,6 +23,7 @@ Include:
 - A concise but detailed summary of what happened
 - Timeline of events
 - MITRE ATT&CK technique IDs that apply
+- Reference threat intelligence findings where available
 
 Respond ONLY with valid JSON:
 {
@@ -29,13 +31,14 @@ Respond ONLY with valid JSON:
     "mitre_techniques": ["T1059.001"],
     "timeline": [
         "Event detected on host X",
-        "Malware agent flagged encoded PowerShell"
+        "Malware agent flagged encoded PowerShell",
+        "Threat intelligence identified XWorm malware family"
     ]
 }"""
 
 
 def report_node(state: SentinelState) -> dict:
-    """Generate final incident report using Gemini."""
+    """Generate final incident report using Gemini with threat intel enrichment."""
     findings = {
         "log": state.get("log_data", {}),
         "severity": state.get("severity", "MEDIUM"),
@@ -44,6 +47,7 @@ def report_node(state: SentinelState) -> dict:
         "malware": state.get("malware_output", {}),
         "network": state.get("network_output", {}),
         "virustotal": state.get("vt_output", {}),
+        "threat_intelligence": state.get("threatintel_output", {}),
     }
 
     prompt = f"""{SYSTEM_PROMPT}
@@ -72,8 +76,22 @@ Analysis Data:
         agents_invoked.append("MalwareAgent")
     if state.get("invoke_network"):
         agents_invoked.append("NetworkAgent")
+    if state.get("invoke_threatintel"):
+        agents_invoked.append("ThreatIntelAgent")
     if state.get("invoke_vt"):
         agents_invoked.append("VirusTotalAgent")
+
+    # Build threat intelligence section for the report
+    threatintel_output = state.get("threatintel_output", {})
+    threat_intel_section = None
+    if threatintel_output.get("threat_match"):
+        threat_intel_section = {
+            "malware_family": threatintel_output.get("malware_family", "Unknown"),
+            "file_name": threatintel_output.get("file_name", ""),
+            "file_type": threatintel_output.get("file_type", ""),
+            "vt_percent": threatintel_output.get("vt_percent"),
+            "source": threatintel_output.get("source", "MalwareBazaar"),
+        }
 
     final_report = {
         "incident_id": f"SOC-{uuid.uuid4().hex[:8].upper()}",
@@ -89,7 +107,9 @@ Analysis Data:
             "malware": state.get("malware_output", {}),
             "network": state.get("network_output", {}),
             "virustotal": state.get("vt_output", {}),
+            "threat_intelligence": threatintel_output,
         },
+        "threat_intelligence": threat_intel_section,
     }
 
     return {"final_report": final_report}

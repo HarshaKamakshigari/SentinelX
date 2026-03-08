@@ -1,6 +1,7 @@
 """
 Triage Agent — LangGraph Node
-Combines all agent outputs. Uses Gemini to assess severity & confidence.
+Combines all agent outputs including threat intelligence.
+Uses Gemini to assess severity & confidence.
 """
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -17,6 +18,22 @@ SYSTEM_PROMPT = """You are a senior SOC triage analyst.
 Given the original security log and findings from specialist agents,
 assign an overall severity and confidence score.
 
+Consider all available intelligence:
+- Malware analysis patterns and MITRE techniques
+- Network analysis findings
+- VirusTotal detection results
+- Threat Intelligence KB matches (known malware families, detection rates)
+
+If the threat intelligence matched a known malware family:
+  - This significantly increases confidence
+  - Known families like XWorm, Mirai, RemcosRAT etc. warrant HIGH or CRITICAL severity
+  - High VT detection percentage (>50%) supports elevation to CRITICAL
+
+File type risk considerations:
+  - exe, dll, elf → higher risk
+  - documents with macros → medium-high risk
+  - scripts (js, vbs, ps1, bat) → medium risk
+
 Severity levels: LOW, MEDIUM, HIGH, CRITICAL
 Confidence: float between 0.0 and 1.0
 
@@ -29,12 +46,13 @@ Respond ONLY with valid JSON:
 
 
 def triage_node(state: SentinelState) -> dict:
-    """Assess severity using Gemini + agent findings."""
+    """Assess severity using Gemini + agent findings including threat intel."""
     findings = {
         "log": state.get("log_data", {}),
         "malware": state.get("malware_output", {}),
         "network": state.get("network_output", {}),
         "virustotal": state.get("vt_output", {}),
+        "threat_intelligence": state.get("threatintel_output", {}),
     }
 
     prompt = f"""{SYSTEM_PROMPT}

@@ -1,4 +1,5 @@
 import os
+import logging
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -15,7 +16,18 @@ GEMINI_MODEL: str = "gemini-2.0-flash"
 
 # --- Application ---
 APP_NAME: str = "SentinelX"
-APP_VERSION: str = "2.0.0"
+APP_VERSION: str = "3.0.0"
+
+# --- Threat Intelligence ---
+THREAT_INTEL_DATASET: str = str(
+    Path(__file__).parent / "data" / "malware_bazaar" / "malware_90ds_filtered.csv"
+)
+
+# --- Logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+)
 
 # --- Validation ---
 if not GEMINI_API_KEY:

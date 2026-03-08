@@ -11,11 +11,13 @@ class SentinelState(TypedDict, total=False):
     invoke_malware: bool
     invoke_network: bool
     invoke_vt: bool
+    invoke_threatintel: bool
 
     # --- Agent outputs (initialized as empty dicts) ---
     malware_output: dict[str, Any]
     network_output: dict[str, Any]
     vt_output: dict[str, Any]
+    threatintel_output: dict[str, Any]
 
     # --- Triage ---
     severity: str

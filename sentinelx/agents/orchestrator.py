@@ -1,6 +1,7 @@
 """
 Orchestrator Agent — LangGraph Node
 Uses Gemini to classify event type and decide which agents to invoke.
+Now includes Threat Intelligence agent routing.
 """
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -21,12 +22,14 @@ Rules:
   rundll32, mshta, wget, curl to suspicious URLs, or any LOLBin abuse) → invoke_malware = true
 - If destination_ip is present → invoke_network = true
 - If file_hash is present → invoke_vt = true
+- If file_hash is present → invoke_threatintel = true
 
 Respond ONLY with valid JSON, no extra text:
 {
     "invoke_malware": true/false,
     "invoke_network": true/false,
-    "invoke_vt": true/false
+    "invoke_vt": true/false,
+    "invoke_threatintel": true/false
 }"""
 
 
@@ -51,14 +54,17 @@ Security Log:
         decision = json.loads(content)
     except json.JSONDecodeError:
         cmd = (log_data.get("command_line") or "").lower()
+        has_hash = bool(log_data.get("file_hash"))
         decision = {
             "invoke_malware": any(k in cmd for k in ["powershell", "-enc", "rundll32", "mshta"]),
             "invoke_network": bool(log_data.get("destination_ip")),
-            "invoke_vt": bool(log_data.get("file_hash")),
+            "invoke_vt": has_hash,
+            "invoke_threatintel": has_hash,
         }
 
     return {
         "invoke_malware": decision.get("invoke_malware", False),
         "invoke_network": decision.get("invoke_network", False),
         "invoke_vt": decision.get("invoke_vt", False),
+        "invoke_threatintel": decision.get("invoke_threatintel", bool(log_data.get("file_hash"))),
     }
