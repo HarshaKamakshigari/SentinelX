@@ -39,6 +39,28 @@ RISK_COMBINATION_WEIGHTS = {
 
 RISK_SCALING_POWER = 2
 
+# --- RAMOA Agent Profiles (Phase 5) ---
+AGENT_PROFILES = {
+    "malware_agent": {
+        "trust": 0.8,
+        "cost": 0.05,
+    },
+    "network_agent": {
+        "trust": 0.7,
+        "cost": 0.04,
+    },
+    "threatintel_agent": {
+        "trust": 0.9,
+        "cost": 0.01,
+    },
+    "vt_agent": {
+        "trust": 0.85,
+        "cost": 0.20,
+    },
+}
+
+UTILITY_THRESHOLD = 0.1
+
 # --- Logging ---
 logging.basicConfig(
     level=logging.INFO,

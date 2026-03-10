@@ -42,5 +42,8 @@ class SentinelState(TypedDict, total=False):
     estimated_risk: float
     scaled_risk: float
 
+    # --- RAMOA orchestrator (Phase 5) ---
+    agent_utilities: dict[str, Any]
+
     # --- Final ---
     final_report: dict[str, Any]
