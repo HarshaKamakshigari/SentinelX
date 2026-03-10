@@ -41,6 +41,8 @@ def report_node(state: SentinelState) -> dict:
     """Generate final incident report using Gemini with threat intel enrichment."""
     findings = {
         "log": state.get("log_data", {}),
+        "heuristic_risk": state.get("heuristic_risk", 0.0),
+        "graph_anomaly_score": state.get("graph_anomaly_score", 0.0),
         "severity": state.get("severity", "MEDIUM"),
         "confidence": state.get("confidence", 0.5),
         "triage_reason": state.get("triage_reason", ""),
@@ -104,6 +106,8 @@ Analysis Data:
         "timeline": report_data.get("timeline", []),
         "agents_invoked": agents_invoked,
         "details": {
+            "heuristic_risk": state.get("heuristic_risk", 0.0),
+            "graph_anomaly_score": state.get("graph_anomaly_score", 0.0),
             "malware": state.get("malware_output", {}),
             "network": state.get("network_output", {}),
             "virustotal": state.get("vt_output", {}),

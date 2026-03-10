@@ -19,6 +19,7 @@ Given the original security log and findings from specialist agents,
 assign an overall severity and confidence score.
 
 Consider all available intelligence:
+- Heuristic risk and graph anomaly signals from the pre-orchestration pipeline
 - Malware analysis patterns and MITRE techniques
 - Network analysis findings
 - VirusTotal detection results
@@ -49,6 +50,8 @@ def triage_node(state: SentinelState) -> dict:
     """Assess severity using Gemini + agent findings including threat intel."""
     findings = {
         "log": state.get("log_data", {}),
+        "heuristic_risk": state.get("heuristic_risk", 0.0),
+        "graph_anomaly_score": state.get("graph_anomaly_score", 0.0),
         "malware": state.get("malware_output", {}),
         "network": state.get("network_output", {}),
         "virustotal": state.get("vt_output", {}),
