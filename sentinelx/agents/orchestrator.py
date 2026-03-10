@@ -40,6 +40,7 @@ def orchestrator_node(state: SentinelState) -> dict:
     log_data = state.get("normalized_event") or state["log_data"]
     heuristic_risk = state.get("heuristic_risk", 0.0)
     graph_anomaly_score = state.get("graph_anomaly_score", 0.0)
+    scaled_risk = state.get("scaled_risk", 0.0)
     command_line = (log_data.get("command_line") or "").lower()
     has_hash = bool(log_data.get("file_hash"))
     has_ip = bool(log_data.get("destination_ip"))
@@ -47,7 +48,7 @@ def orchestrator_node(state: SentinelState) -> dict:
         token in command_line for token in ["powershell", "-enc", "rundll32", "mshta", "certutil", "bitsadmin"]
     )
 
-    if max(heuristic_risk, graph_anomaly_score) < 0.2 and not any([has_hash, has_ip, suspicious_command]):
+    if scaled_risk < 0.1 and not any([has_hash, has_ip, suspicious_command]):
         return {
             "invoke_malware": False,
             "invoke_network": False,

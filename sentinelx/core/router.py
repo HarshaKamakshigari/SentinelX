@@ -2,8 +2,8 @@
 LangGraph Workflow — Compiles the SentinelX agent graph.
 
 Flow (Sequential with conditional skipping):
-  Input → Normalizer → Heuristic Risk → Graph Layer → Orchestrator
-    → Malware → Network → ThreatIntel → VT → Triage → Report → END
+  Input → Normalizer → Heuristic Risk → Graph Layer → Risk Combiner
+    → Orchestrator → Malware → Network → ThreatIntel → VT → Triage → Report → END
 
 Each specialist agent checks the routing flags set by the Orchestrator
 and skips processing if not invoked.
@@ -12,6 +12,7 @@ from langgraph.graph import StateGraph, END
 from ..models.state import SentinelState
 from ..normalization.event_normalizer import normalizer_node
 from ..risk.heuristic_risk import heuristic_risk_node
+from ..risk.risk_combiner import risk_combiner_node
 from ..graph.graph_layer_node import graph_layer_node
 from ..agents.orchestrator import orchestrator_node
 from ..agents.malware_agent import malware_node
@@ -31,6 +32,7 @@ def compile_graph():
     graph.add_node("normalizer", normalizer_node)
     graph.add_node("heuristic_risk", heuristic_risk_node)
     graph.add_node("graph_layer", graph_layer_node)
+    graph.add_node("risk_combiner", risk_combiner_node)
     graph.add_node("orchestrator", orchestrator_node)
     graph.add_node("malware_agent", malware_node)
     graph.add_node("network_agent", network_node)
@@ -43,7 +45,8 @@ def compile_graph():
     graph.set_entry_point("normalizer")
     graph.add_edge("normalizer", "heuristic_risk")
     graph.add_edge("heuristic_risk", "graph_layer")
-    graph.add_edge("graph_layer", "orchestrator")
+    graph.add_edge("graph_layer", "risk_combiner")
+    graph.add_edge("risk_combiner", "orchestrator")
     graph.add_edge("orchestrator", "malware_agent")
     graph.add_edge("malware_agent", "network_agent")
     graph.add_edge("network_agent", "threatintel_agent")

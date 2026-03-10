@@ -127,7 +127,7 @@ def combine_risk(heuristic, graph):
     w_h = RISK_COMBINATION_WEIGHTS["heuristic"]
     w_g = RISK_COMBINATION_WEIGHTS["graph"]
 
-    estimated = (w_h * heuristic) + (w_g * graph)
+    estimated = min(1.0, (w_h * heuristic) + (w_g * graph))
 
     scaled = estimated ** RISK_SCALING_POWER
 
