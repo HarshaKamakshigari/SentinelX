@@ -1,27 +1,13 @@
 SentinelX v4 – Phase 2 Implementation
 Heuristic Risk Engine
 
-Version: SentinelX v4 – Phase 2
+Goal
 
-Goal:
+Introduce a deterministic heuristic risk scoring engine that evaluates how suspicious an event is before invoking analytical agents.
 
-Introduce a deterministic heuristic risk scoring engine that evaluates how suspicious an event is before invoking heavy agents.
+This corresponds to the RAMOA heuristic risk estimation stage.
 
-This is the first part of RAMOA's risk estimation layer.
-
-1. Why This Layer Exists
-
-Currently SentinelX:
-
-log → orchestrator → agents
-
-Every event may trigger LLM analysis or external APIs.
-
-This is inefficient.
-
-RAMOA introduces risk estimation before investigation.
-
-So the pipeline becomes:
+Pipeline
 
 log
  ↓
@@ -32,35 +18,34 @@ heuristic_risk
 orchestrator
  ↓
 agents
-2. Phase 2 Objective
 
-Compute a baseline risk score between 0 and 1 using security heuristics.
 
-Example suspicious signals:
+Risk Signals
 
-Signal	Example	Risk
-Encoded PowerShell	powershell -enc	high
-Known bad IP	TOR / malicious IP	medium
-Malware hash	known malware sample	very high
-Suspicious port	unusual port	low
+Risk signals must come directly from the normalized event.
 
-These signals produce HeuristicRisk.
+The following binary indicators are used:
 
-3. New Module
+encoded_powershell_flag
+suspicious_lolbin_flag
+external_connection_flag
+known_bad_hash_flag
 
-Create directory:
 
-sentinelx/
- ├ risk/
- │    __init__.py
- │    heuristic_risk.py
-4. Risk Flags Configuration
+Heuristic Risk Formula
 
-Modify:
+HeuristicRisk =
+a1 × EncodedCommandFlag
++ a2 × SuspiciousLOLBinFlag
++ a3 × ExternalConnectionFlag
++ a4 × KnownBadHashFlag
 
-sentinelx/config.py
+The final risk value is normalized between 0 and 1.
 
-Add:
+
+Configuration
+
+Modify sentinelx/config.py
 
 RISK_FLAGS = {
 
@@ -68,23 +53,19 @@ RISK_FLAGS = {
 
     "suspicious_lolbin": 0.4,
 
-    "known_bad_ip": 0.4,
+    "external_connection": 0.2,
 
     "known_bad_hash": 0.8,
 
-    "external_connection": 0.2,
-
 }
 
-These are weights.
 
-Higher weight → stronger signal.
+Implementation:
+Create file:
+File: sentinelx/risk/heuristic_risk.py
+
 
 5. Heuristic Detection Logic
-
-Create file:
-
-sentinelx/risk/heuristic_risk.py
 
 Implementation:
 
@@ -99,6 +80,13 @@ SUSPICIOUS_LOLBINS = [
     "bitsadmin",
     "certutil"
 ]
+
+
+KNOWN_BAD_HASHES = {
+    "abcd1234",
+    "deadbeef",
+    "malware_sample_hash"
+}
 
 
 def check_encoded_powershell(cmd):
@@ -136,12 +124,17 @@ def check_external_connection(dest_ip):
     return 1
 
 
-def check_bad_hash(threatintel):
+def check_known_bad_hash(file_hash):
 
-    if threatintel.get("threat_match"):
+    if not file_hash:
+        return 0
+
+    if file_hash in KNOWN_BAD_HASHES:
         return 1
 
     return 0
+
+
 6. Risk Calculation
 
 Add scoring function:
@@ -161,19 +154,20 @@ def calculate_risk(flags):
     risk = min(1.0, score / total_weight)
 
     return risk
+
 7. Heuristic Risk Node
 
 Add LangGraph node:
 
 def heuristic_risk_node(state: SentinelState) -> dict:
 
-    log = state.get("log_data", {})
+    event = state.get("normalized_event", {})
 
-    threatintel = state.get("threatintel_output", {})
+    command = event.get("command_line")
 
-    command = log.get("command_line")
+    dest_ip = event.get("destination_ip")
 
-    dest_ip = log.get("destination_ip")
+    file_hash = event.get("file_hash")
 
     flags = {}
 
@@ -183,14 +177,19 @@ def heuristic_risk_node(state: SentinelState) -> dict:
 
     flags["external_connection"] = check_external_connection(dest_ip)
 
-    flags["known_bad_hash"] = check_bad_hash(threatintel)
+    flags["known_bad_hash"] = check_known_bad_hash(file_hash)
 
     risk = calculate_risk(flags)
 
     return {
+
         "heuristic_risk": risk,
+
         "risk_flags": flags
+
     }
+
+
 8. Update SentinelState
 
 Modify:

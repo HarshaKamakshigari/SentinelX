@@ -199,7 +199,10 @@ Formula:
 
 Deviation = |current_degree − avg_degree| / avg_degree
 
-Implementation:
+Graph Baseline Tracking:
+
+Each node maintains a historical degree baseline.
+Deviation is measured relative to the running average.
 
 node_degree_history = {}
 
@@ -207,13 +210,35 @@ def degree_deviation(node):
 
     degree = temporal_graph.degree(node)
 
-    avg = node_degree_history.get(node, degree)
+    record = node_degree_history.get(node)
+
+    if not record:
+
+        node_degree_history[node] = {
+
+            "total": degree,
+
+            "count": 1
+
+        }
+
+        return 0
+
+
+    record["total"] += degree
+    record["count"] += 1
+
+    avg = record["total"] / record["count"]
 
     deviation = abs(degree - avg) / max(avg, 1)
 
-    node_degree_history[node] = (avg + degree) / 2
-
     return deviation
+
+Implementation:
+
+node_degree_history = {}
+
+
 Metric 2 – Rarity Score
 
 Rare relationships are suspicious.

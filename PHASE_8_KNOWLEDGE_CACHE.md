@@ -110,14 +110,24 @@ event_cache = {}
 
 CACHE_TTL = 3600
 7. Event Signature
-
+Only stable behavioral attributes should be used to generate cache keys.
 Add function:
 
+import hashlib
 def event_signature(event):
 
-    key = str(sorted(event.items()))
+    process = event.get("process_name", "")
+
+    cmd = event.get("command_line", "")
+
+    ip = event.get("destination_ip", "")
+
+    file_hash = event.get("file_hash", "")
+
+    key = process + cmd + ip + file_hash
 
     return hashlib.sha256(key.encode()).hexdigest()
+
 8. Cache Lookup
 
 Add function:
