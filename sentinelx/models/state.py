@@ -30,5 +30,9 @@ class SentinelState(TypedDict, total=False):
     confidence: float
     triage_reason: str
 
+    # --- Heuristic risk ---
+    heuristic_risk: float
+    risk_flags: dict[str, Any]
+
     # --- Final ---
     final_report: dict[str, Any]
