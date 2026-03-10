@@ -4,8 +4,14 @@ from typing import TypedDict, Any, Optional
 class SentinelState(TypedDict, total=False):
     """Shared state flowing through the LangGraph pipeline."""
 
+    # --- Raw input ---
+    raw_log: Optional[str]
+
     # --- Input ---
     log_data: dict[str, Any]
+
+    # --- Normalized event ---
+    normalized_event: dict[str, Any]
 
     # --- Orchestrator decision ---
     invoke_malware: bool
