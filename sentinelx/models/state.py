@@ -38,5 +38,9 @@ class SentinelState(TypedDict, total=False):
     # --- Graph intelligence ---
     graph_anomaly_score: float
 
+    # --- Risk combination (Phase 4) ---
+    estimated_risk: float
+    scaled_risk: float
+
     # --- Final ---
     final_report: dict[str, Any]

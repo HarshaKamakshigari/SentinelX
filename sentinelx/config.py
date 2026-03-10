@@ -31,6 +31,14 @@ RISK_FLAGS = {
     "known_bad_hash": 0.8,
 }
 
+# --- Risk Combination (Phase 4) ---
+RISK_COMBINATION_WEIGHTS = {
+    "heuristic": 0.6,
+    "graph": 0.4,
+}
+
+RISK_SCALING_POWER = 2
+
 # --- Logging ---
 logging.basicConfig(
     level=logging.INFO,
