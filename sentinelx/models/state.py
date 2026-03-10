@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TypedDict, Any, Optional
 
+
 class SentinelState(TypedDict, total=False):
     """Shared state flowing through the LangGraph pipeline."""
 
@@ -33,6 +34,9 @@ class SentinelState(TypedDict, total=False):
     # --- Heuristic risk ---
     heuristic_risk: float
     risk_flags: dict[str, Any]
+
+    # --- Graph intelligence ---
+    graph_anomaly_score: float
 
     # --- Final ---
     final_report: dict[str, Any]

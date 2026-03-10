@@ -23,6 +23,14 @@ THREAT_INTEL_DATASET: str = str(
     Path(__file__).parent / "data" / "malware_bazaar" / "malware_90ds_filtered.csv"
 )
 
+# --- Risk Engine ---
+RISK_FLAGS = {
+    "encoded_powershell": 0.5,
+    "suspicious_lolbin": 0.4,
+    "external_connection": 0.2,
+    "known_bad_hash": 0.8,
+}
+
 # --- Logging ---
 logging.basicConfig(
     level=logging.INFO,

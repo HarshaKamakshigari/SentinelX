@@ -1,7 +1,7 @@
 """
 Orchestrator Agent — LangGraph Node
 Uses Gemini to classify event type and decide which agents to invoke.
-Now includes Threat Intelligence agent routing.
+Now includes threat intelligence plus pre-orchestration scoring awareness.
 """
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -18,6 +18,8 @@ SYSTEM_PROMPT = """You are a Security Operations Center orchestrator.
 Given a security log event, decide which specialist agents should analyze it.
 
 Rules:
+- The heuristic_risk and graph_anomaly_score fields are upstream anomaly signals.
+- If both scores are very low (< 0.20) and the log has no strong artifact (hash, IP, suspicious command), prefer skipping expensive agents.
 - If command_line contains suspicious patterns (powershell, encoded commands, 
   rundll32, mshta, wget, curl to suspicious URLs, or any LOLBin abuse) → invoke_malware = true
 - If destination_ip is present → invoke_network = true
@@ -35,9 +37,31 @@ Respond ONLY with valid JSON, no extra text:
 
 def orchestrator_node(state: SentinelState) -> dict:
     """Classify event and decide routing."""
-    log_data = state["log_data"]
+    log_data = state.get("normalized_event") or state["log_data"]
+    heuristic_risk = state.get("heuristic_risk", 0.0)
+    graph_anomaly_score = state.get("graph_anomaly_score", 0.0)
+    command_line = (log_data.get("command_line") or "").lower()
+    has_hash = bool(log_data.get("file_hash"))
+    has_ip = bool(log_data.get("destination_ip"))
+    suspicious_command = any(
+        token in command_line for token in ["powershell", "-enc", "rundll32", "mshta", "certutil", "bitsadmin"]
+    )
+
+    if max(heuristic_risk, graph_anomaly_score) < 0.2 and not any([has_hash, has_ip, suspicious_command]):
+        return {
+            "invoke_malware": False,
+            "invoke_network": False,
+            "invoke_vt": False,
+            "invoke_threatintel": False,
+        }
 
     prompt = f"""{SYSTEM_PROMPT}
+
+Upstream Scores:
+{json.dumps({
+    "heuristic_risk": heuristic_risk,
+    "graph_anomaly_score": graph_anomaly_score,
+}, indent=2)}
 
 Security Log:
 {json.dumps(log_data, indent=2)}"""
@@ -49,15 +73,13 @@ Security Log:
     if content.startswith("```"):
         content = content.split("\n", 1)[1]
         content = content.rsplit("```", 1)[0]
-    
+
     try:
         decision = json.loads(content)
     except json.JSONDecodeError:
-        cmd = (log_data.get("command_line") or "").lower()
-        has_hash = bool(log_data.get("file_hash"))
         decision = {
-            "invoke_malware": any(k in cmd for k in ["powershell", "-enc", "rundll32", "mshta"]),
-            "invoke_network": bool(log_data.get("destination_ip")),
+            "invoke_malware": suspicious_command or heuristic_risk >= 0.35 or graph_anomaly_score >= 0.4,
+            "invoke_network": has_ip or graph_anomaly_score >= 0.35,
             "invoke_vt": has_hash,
             "invoke_threatintel": has_hash,
         }
