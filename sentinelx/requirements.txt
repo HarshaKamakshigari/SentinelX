@@ -1,9 +1,20 @@
-fastapi
-uvicorn[standard]
-pydantic>=2.0
-python-dotenv
-langchain-core
-langchain-google-genai
-langgraph
-requests
-networkx
+# Web framework
+fastapi>=0.121.1
+uvicorn[standard]>=0.38.0
+
+# Data validation
+pydantic>=2.8.2
+
+# Environment management
+python-dotenv>=1.2.2
+
+# LangChain / LangGraph stack
+langchain-core>=0.3.0
+langchain-google-genai>=2.0.0
+langgraph>=0.2.0
+
+# HTTP client (VirusTotal agent)
+requests>=2.31.0
+
+# Graph intelligence
+networkx>=3.3
