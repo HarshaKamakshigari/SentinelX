@@ -1,0 +1,25 @@
+curl -X POST http://localhost:8000/ingest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "host": "finance-01",
+    "event_type": "process_creation",
+    "command_line": "powershell.exe -enc SGVsbG8gV29ybGQ=",
+    "destination_ip": "45.77.12.90",
+    "user_id": "admin"
+  }'
+
+  
+LIST OF ALL INPUTS:
+  {
+  "host": "string",
+  "event_type": "string",
+  "process_name": "string",---
+  "parent_process": "string",--
+  "command_line": "string",
+  "source_ip": "string",--
+  "file_hash": "string",--
+  "file_name": "string",--
+  "destination_ip": "string",--
+  "user_id": "string",
+  "raw_log": "string"--
+}
