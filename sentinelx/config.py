@@ -12,7 +12,7 @@ GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 VIRUSTOTAL_API_KEY: str = os.getenv("VIRUSTOTAL_API_KEY", "")
 
 # --- Model Configuration ---
-GEMINI_MODEL: str = "gemini-2.0-flash"
+GEMINI_MODEL: str = "gemini-2.5-flash"
 
 # --- Application ---
 APP_NAME: str = "SentinelX"

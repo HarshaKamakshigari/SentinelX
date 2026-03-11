@@ -88,7 +88,7 @@ async def root():
         "service": "SentinelX",
         "version": "3.0.0",
         "status": "operational",
-        "engine": "LangGraph + Gemini 2.0 Flash",
+        "engine": "LangGraph +  gemini 3-pro preview",
         "threat_intel": {
             "enabled": True,
             "source": "MalwareBazaar",
